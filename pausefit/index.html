@@ -44,6 +44,12 @@
           </div>
         </div>
 
+        <div class="coach-strip" aria-label="Game steps">
+          <span class="coach-step active" id="stepStart">1 Start</span>
+          <span class="coach-step" id="stepWatch">2 Watch</span>
+          <span class="coach-step" id="stepTap">3 Tap</span>
+        </div>
+
         <div class="video-stage" id="videoStage">
           <video
             id="challengeVideo"
@@ -53,8 +59,9 @@
             aria-label="Daily challenge video"
           ></video>
           <div class="outline" id="targetOutline" aria-hidden="true"></div>
+          <div class="test-badge" id="testBadge">Test clip</div>
           <div class="tap-shield" id="tapShield" role="button" tabindex="0" aria-label="Pause video"></div>
-          <div class="status-pill" id="statusPill">Tap to start</div>
+          <div class="status-pill" id="statusPill">Tap disabled</div>
         </div>
 
         <section class="challenge-info">

@@ -50,7 +50,8 @@ button {
 
 .topbar,
 .challenge-info,
-.score-strip {
+.score-strip,
+.coach-strip {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -125,6 +126,34 @@ h2 {
   font-size: 1.4rem;
 }
 
+.coach-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 7px;
+}
+
+.coach-step {
+  min-width: 0;
+  padding: 8px 6px;
+  border-radius: 6px;
+  color: var(--muted);
+  background: rgba(245, 240, 232, 0.05);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.coach-step.active {
+  color: #151004;
+  background: var(--accent);
+}
+
+.coach-step.done {
+  color: #07110b;
+  background: var(--good);
+}
+
 .video-stage {
   position: relative;
   width: 100%;
@@ -153,9 +182,9 @@ video {
   width: var(--outline-w, 30%);
   height: var(--outline-h, 18%);
   transform: translate(-50%, -50%) rotate(var(--outline-r, 0deg));
-  border: 3px solid rgba(247, 201, 72, 0.95);
+  border: 4px solid rgba(247, 201, 72, 0.98);
   border-radius: var(--outline-radius, 999px);
-  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.11), 0 0 24px rgba(247, 201, 72, 0.35);
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.18), 0 0 28px rgba(247, 201, 72, 0.52);
   pointer-events: none;
 }
 
@@ -171,6 +200,20 @@ video {
 .outline::after {
   inset: -9px;
   border-color: rgba(247, 201, 72, 0.28);
+}
+
+.test-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 7px 9px;
+  border: 1px solid rgba(247, 201, 72, 0.55);
+  border-radius: 999px;
+  background: rgba(16, 20, 21, 0.86);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .tap-shield {
@@ -205,6 +248,11 @@ video {
 .status-pill.bad {
   background: rgba(255, 95, 87, 0.95);
   color: #160403;
+}
+
+.status-pill.idle {
+  background: rgba(245, 240, 232, 0.92);
+  color: #101415;
 }
 
 .challenge-info {

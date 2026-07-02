@@ -2,34 +2,36 @@ const dailies = [
   {
     id: 1,
     label: "Daily #001",
-    topic: "Summer Bloom",
-    prompt: "Pause when the flower head sits inside the ring.",
+    topic: "Test Clip",
+    prompt: "Tap Start first. Then pause when the bright flower fills the yellow ring.",
     videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     perfectTime: 2.42,
-    winWindow: 0.055,
+    winWindow: 0.18,
+    testClip: true,
     outline: {
-      x: "47%",
-      y: "43%",
-      w: "34%",
-      h: "22%",
-      r: "-4deg",
+      x: "49%",
+      y: "41%",
+      w: "43%",
+      h: "28%",
+      r: "0deg",
       radius: "999px"
     }
   },
   {
     id: 2,
     label: "Daily #002",
-    topic: "Monday Reset",
-    prompt: "Pause when the bright bloom fits the outline.",
+    topic: "Test Clip",
+    prompt: "Tap Start first. Then pause when the bright flower fills the yellow ring.",
     videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     perfectTime: 1.28,
-    winWindow: 0.045,
+    winWindow: 0.18,
+    testClip: true,
     outline: {
-      x: "50%",
-      y: "38%",
-      w: "30%",
-      h: "20%",
-      r: "2deg",
+      x: "52%",
+      y: "39%",
+      w: "42%",
+      h: "27%",
+      r: "0deg",
       radius: "999px"
     }
   }
@@ -50,6 +52,10 @@ const els = {
   topicName: document.querySelector("#topicName"),
   hintText: document.querySelector("#hintText"),
   startButton: document.querySelector("#startButton"),
+  testBadge: document.querySelector("#testBadge"),
+  stepStart: document.querySelector("#stepStart"),
+  stepWatch: document.querySelector("#stepWatch"),
+  stepTap: document.querySelector("#stepTap"),
   dialog: document.querySelector("#resultDialog"),
   resultDaily: document.querySelector("#resultDaily"),
   resultTitle: document.querySelector("#resultTitle"),
@@ -73,6 +79,7 @@ const state = {
   misses: 0,
   score: 0,
   lastLoopTime: 0,
+  canTap: false,
   shareText: ""
 };
 
@@ -84,6 +91,9 @@ function setupDaily() {
   els.video.loop = false;
   els.video.muted = true;
   els.muteIcon.textContent = "🔇";
+  els.testBadge.hidden = !daily.testClip;
+  setStatus("Tap Start to arm", "idle");
+  renderSteps("start");
 
   els.outline.style.setProperty("--outline-x", daily.outline.x);
   els.outline.style.setProperty("--outline-y", daily.outline.y);
@@ -119,16 +129,25 @@ async function startGame() {
   }
 
   state.started = true;
+  state.canTap = false;
   els.startButton.textContent = "Playing";
-  els.statusPill.textContent = "Tap to pause";
+  els.startButton.disabled = true;
+  setStatus("Loading video", "idle");
+  renderSteps("watch");
   els.video.currentTime = 0;
 
   try {
     await els.video.play();
+    state.canTap = true;
+    setStatus("Now tap to pause", "");
+    renderSteps("tap");
   } catch {
     els.statusPill.textContent = "Tap start again";
     state.started = false;
+    state.canTap = false;
     els.startButton.textContent = "Start";
+    els.startButton.disabled = false;
+    renderSteps("start");
   }
 }
 
@@ -138,12 +157,18 @@ function handleTap() {
     return;
   }
 
-  if (!state.started || els.video.paused) {
-    startGame();
+  if (!state.started) {
+    setStatus("Tap Start first", "idle");
+    return;
+  }
+
+  if (!state.canTap || els.video.paused) {
+    setStatus("Tap not enabled yet", "idle");
     return;
   }
 
   els.video.pause();
+  state.canTap = false;
   const delta = Math.abs(els.video.currentTime - daily.perfectTime);
   const didWin = delta <= daily.winWindow;
 
@@ -157,10 +182,11 @@ function handleTap() {
   state.misses += 1;
   state.score += 2;
   renderScore();
-  pulseStatus("Miss +2", "bad");
+  pulseStatus(`${els.video.currentTime < daily.perfectTime ? "Too early" : "Too late"} +2`, "bad");
   window.setTimeout(() => {
     if (!state.solved) {
       els.video.play();
+      state.canTap = true;
     }
   }, 520);
 }
@@ -178,10 +204,13 @@ function handleLoop() {
   state.lastLoopTime = now;
   state.loops += 1;
   state.score += 1;
+  state.canTap = false;
   renderScore();
   pulseStatus("Loop +1", "");
   els.video.currentTime = 0;
-  els.video.play();
+  els.video.play().then(() => {
+    state.canTap = true;
+  });
 }
 
 function finishDaily() {
@@ -194,6 +223,9 @@ function finishDaily() {
 
   localStorage.setItem(storageKey(), JSON.stringify(result));
   state.shareText = result.shareText;
+  els.startButton.textContent = "Result";
+  els.startButton.disabled = false;
+  renderSteps("done");
   window.setTimeout(showResult, 500);
 }
 
@@ -223,7 +255,9 @@ function renderScore() {
 
 function showStoredResult() {
   els.startButton.textContent = "Result";
-  els.statusPill.textContent = "Daily complete";
+  els.startButton.disabled = false;
+  setStatus("Daily complete", "good");
+  renderSteps("done");
 }
 
 function showResult() {
@@ -241,19 +275,52 @@ function showResult() {
 }
 
 function pulseStatus(message, type) {
-  els.statusPill.classList.remove("good", "bad");
+  setStatus(message, type);
+
+  window.setTimeout(() => {
+    if (!state.solved) {
+      setStatus(state.canTap ? "Now tap to pause" : "Tap disabled", state.canTap ? "" : "idle");
+    }
+  }, 620);
+}
+
+function setStatus(message, type) {
+  els.statusPill.classList.remove("good", "bad", "idle");
   if (type) {
     els.statusPill.classList.add(type);
   }
 
   els.statusPill.textContent = message;
+}
 
-  window.setTimeout(() => {
-    if (!state.solved) {
-      els.statusPill.classList.remove("good", "bad");
-      els.statusPill.textContent = "Tap to pause";
-    }
-  }, 620);
+function renderSteps(activeStep) {
+  for (const step of [els.stepStart, els.stepWatch, els.stepTap]) {
+    step.classList.remove("active", "done");
+  }
+
+  if (activeStep === "start") {
+    els.stepStart.classList.add("active");
+    return;
+  }
+
+  if (activeStep === "watch") {
+    els.stepStart.classList.add("done");
+    els.stepWatch.classList.add("active");
+    return;
+  }
+
+  if (activeStep === "tap") {
+    els.stepStart.classList.add("done");
+    els.stepWatch.classList.add("done");
+    els.stepTap.classList.add("active");
+    return;
+  }
+
+  if (activeStep === "done") {
+    els.stepStart.classList.add("done");
+    els.stepWatch.classList.add("done");
+    els.stepTap.classList.add("done");
+  }
 }
 
 async function shareResult() {
