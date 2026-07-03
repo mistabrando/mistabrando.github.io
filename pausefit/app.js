@@ -3,16 +3,17 @@ const dailies = [
     id: 1,
     label: "Daily #001",
     topic: "Test Clip",
-    prompt: "Tap Start first. Then pause when the bright flower fills the yellow ring.",
+    prompt: "Tap Start first. Then pause when the flower head matches the yellow flower outline.",
     videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     perfectTime: 2.42,
     winWindow: 0.18,
     testClip: true,
     outline: {
+      type: "flower",
       x: "49%",
       y: "41%",
-      w: "43%",
-      h: "28%",
+      w: "47%",
+      h: "32%",
       r: "0deg",
       radius: "999px"
     }
@@ -21,16 +22,17 @@ const dailies = [
     id: 2,
     label: "Daily #002",
     topic: "Test Clip",
-    prompt: "Tap Start first. Then pause when the bright flower fills the yellow ring.",
+    prompt: "Tap Start first. Then pause when the flower head matches the yellow flower outline.",
     videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     perfectTime: 1.28,
     winWindow: 0.18,
     testClip: true,
     outline: {
+      type: "flower",
       x: "52%",
       y: "39%",
-      w: "42%",
-      h: "27%",
+      w: "46%",
+      h: "31%",
       r: "0deg",
       radius: "999px"
     }
@@ -95,12 +97,7 @@ function setupDaily() {
   setStatus("Tap Start to arm", "idle");
   renderSteps("start");
 
-  els.outline.style.setProperty("--outline-x", daily.outline.x);
-  els.outline.style.setProperty("--outline-y", daily.outline.y);
-  els.outline.style.setProperty("--outline-w", daily.outline.w);
-  els.outline.style.setProperty("--outline-h", daily.outline.h);
-  els.outline.style.setProperty("--outline-r", daily.outline.r);
-  els.outline.style.setProperty("--outline-radius", daily.outline.radius);
+  renderOutline(daily.outline);
 
   const stored = localStorage.getItem(storageKey());
   if (stored) {
@@ -120,6 +117,35 @@ function setupDaily() {
 
 function storageKey() {
   return `pausefit:${daily.label}`;
+}
+
+function renderOutline(outline) {
+  els.outline.className = `outline outline--${outline.type || "box"}`;
+  els.outline.style.setProperty("--outline-x", outline.x);
+  els.outline.style.setProperty("--outline-y", outline.y);
+  els.outline.style.setProperty("--outline-w", outline.w);
+  els.outline.style.setProperty("--outline-h", outline.h);
+  els.outline.style.setProperty("--outline-r", outline.r);
+  els.outline.style.setProperty("--outline-radius", outline.radius);
+
+  if (outline.type === "flower") {
+    els.outline.innerHTML = `
+      <svg class="outline-svg" viewBox="0 0 200 160" aria-hidden="true" focusable="false">
+        <g class="flower-guide" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="100" cy="34" rx="28" ry="31" />
+          <ellipse cx="142" cy="53" rx="28" ry="31" transform="rotate(48 142 53)" />
+          <ellipse cx="154" cy="98" rx="28" ry="31" transform="rotate(100 154 98)" />
+          <ellipse cx="100" cy="118" rx="31" ry="28" />
+          <ellipse cx="46" cy="98" rx="28" ry="31" transform="rotate(80 46 98)" />
+          <ellipse cx="58" cy="53" rx="28" ry="31" transform="rotate(-48 58 53)" />
+          <circle cx="100" cy="78" r="27" />
+        </g>
+      </svg>
+    `;
+    return;
+  }
+
+  els.outline.innerHTML = "";
 }
 
 async function startGame() {
